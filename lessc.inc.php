@@ -63,6 +63,8 @@ class lessc {
 	protected $sourceParser = null;
 	protected $sourceLoc = null;
 
+	static public $defaultValue = array("keyword", "");
+	
 	static protected $nextImportId = 0; // uniquely identify imports
 
 	// attempts to find the path of an import url, returns null for css files
@@ -647,8 +649,7 @@ class lessc {
 					// has default value
 					$value = $a[2];
 				} else {
-					$this->throwError("Failed to assign arg " . $a[1]);
-					$value = null; // :(
+					return self::$defaultValue;
 				}
 
 				$value = $this->reduce($value);
@@ -717,7 +718,7 @@ class lessc {
 			$mixins = $this->findBlocks($block, $path, $orderedArgs, $keywordArgs);
 
 			if ($mixins === null) {
-				$this->throwError("{$prop[1][0]} is undefined");
+				return $mixin;
 			}
 
 			foreach ($mixins as $mixin) {
@@ -991,7 +992,7 @@ class lessc {
 				if (isset($items[0])) {
 					return $this->lib_e($items[0]);
 				}
-				$this->throwError("unrecognised input");
+				return self::$defaultValue;
 			case "string":
 				$arg[1] = "";
 				return $arg;
@@ -1439,7 +1440,7 @@ class lessc {
 			}
 
 			$seen[$key] = true;
-			$out = $this->reduce($this->get($key));
+			$out = $this->reduce($this->get($key, self::$defaultValue));
 			$seen[$key] = false;
 			return $out;
 		case "list":
@@ -1798,7 +1799,7 @@ class lessc {
 
 
 	// get the highest occurrence entry for a name
-	protected function get($name) {
+	protected function get($name, $default=null) {
 		$current = $this->env;
 
 		$isArguments = $name == $this->vPrefix . 'arguments';
@@ -1815,7 +1816,7 @@ class lessc {
 			}
 		}
 
-		$this->throwError("variable $name is undefined");
+		return $default;
 	}
 
 	// inject array of unparsed strings into environment as variables
